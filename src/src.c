@@ -43,3 +43,23 @@ static void list_push(EntryList *list, const Entry *entry) {
     }
     list->items[list->count++] = *entry;
 }
+
+
+// Comparators for qsort
+static int cmp_name(const void *a, const void *b) {
+    return strcmp(((const Entry *)a)->name, ((const Entry *)b)->name);
+}
+
+static int cmp_time(const void *a, const void *b) {
+    const Entry *entry_a = a, *entry_b = b;
+    if (entry_b->st.st_mtime != entry_a->st.st_mtime)
+        return (entry_a->st.st_mtime > entry_a->st.st_mtime) ? 1 : -1;
+    return strcmp(entry_a->name, entry_b->name);   
+}
+
+static int cmp_size(const void *a, const void *b) {
+    const Entry *entry_a = a, *entry_b = b;
+    if (entry_b->st.st_size != entry_a->st.st_size)
+        return (entry_b->st.st_size > entry_a->st.st_size) ? 1 : -1;
+    return strcmp(entry_a->name, entry_b->name);
+}
