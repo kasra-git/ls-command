@@ -89,3 +89,23 @@ static void mode_string(mode_t m, char out[11]) {
     if (m & S_IWOTH) out[8] = 'w';
     if (m & S_IXOTH) out[9] = 'x';
 }
+
+/*
+Format `size` as "1.2K", "3.4M", into `buffer`.
+Used only when OPT_H(-h) is set.
+*/
+static void print_human(long size, char *buffer, size_t length) {
+    const char *units[] = {"B", "K", "M", "G", "T"};
+    double double_size = size;
+    int counter = 0;
+
+    while (double_size >= 1024.0 && counter < 4) {
+        double_size /= 1024.0;
+        counter++;
+    }
+    
+    if (counter == 0) 
+        snprintf(buffer, length, "%ld", size);
+    else        
+        snprintf(buffer, length, "%.1f%s", double_size, units[counter]);
+}
