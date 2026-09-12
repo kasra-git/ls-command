@@ -63,3 +63,29 @@ static int cmp_size(const void *a, const void *b) {
         return (entry_b->st.st_size > entry_a->st.st_size) ? 1 : -1;
     return strcmp(entry_a->name, entry_b->name);
 }
+
+
+/*
+Build the 10-character permission string.
+out[0] is the file type; out[1..9] are user/group/other rwx bits.
+*/
+static void mode_string(mode_t m, char out[11]) {
+    strcpy(out, "----------");
+
+    if (S_ISDIR(m))  out[0] = 'd';
+    if (S_ISLNK(m))  out[0] = 'l';
+    if (S_ISCHR(m))  out[0] = 'c';
+    if (S_ISBLK(m))  out[0] = 'b';
+    if (S_ISFIFO(m)) out[0] = 'p';
+    if (S_ISSOCK(m)) out[0] = 's';
+
+    if (m & S_IRUSR) out[1] = 'r';
+    if (m & S_IWUSR) out[2] = 'w';
+    if (m & S_IXUSR) out[3] = 'x';
+    if (m & S_IRGRP) out[4] = 'r';
+    if (m & S_IWGRP) out[5] = 'w';
+    if (m & S_IXGRP) out[6] = 'x';
+    if (m & S_IROTH) out[7] = 'r';
+    if (m & S_IWOTH) out[8] = 'w';
+    if (m & S_IXOTH) out[9] = 'x';
+}
