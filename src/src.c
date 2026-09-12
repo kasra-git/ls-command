@@ -28,3 +28,18 @@ void print_help(const char *prog) {
 }
 
 
+/* 
+    Append one entry to the dynamic array, doubling capacity
+    when full (amortized O(1) per append)
+*/
+static void list_push(EntryList *list, const Entry *entry) {
+    if (list->count == list->cap) {
+        list->cap = list->cap ? list->cap * 2 : 16;
+        list->items = realloc(list->items, list->cap * sizeof(Entry));
+        if (!list->items) {
+            perror("realloc");
+            exit(1);
+        }
+    }
+    list->items[list->count++] = *entry;
+}
