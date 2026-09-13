@@ -123,3 +123,8 @@ static const char *color_for(const Entry *entry) {
         return COLOR_EXEC;
     return COLOR_FILE;
 }
+
+// Only emit ANSI codes when stdout is an actual terminal.
+static int use_color(void) {
+    return isatty(STDOUT_FILENO);
+}
