@@ -11,6 +11,10 @@ int opt_has(const Options *option, unsigned int flag) {
     return option->bits & flag;
 }
 
+
+// Forward declaration: defined below, called from list_dir.
+static void print_entry(const Entry *entry, const Options *options);
+
 // Print the --help screen
 void print_help(const char *prog) {
     printf("Usage: %s [OPTION]... [FILE]...\n", prog);
