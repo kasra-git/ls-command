@@ -128,3 +128,57 @@ static const char *color_for(const Entry *entry) {
 static int use_color(void) {
     return isatty(STDOUT_FILENO);
 }
+
+
+/*
+Print one entry in the -l style:
+perms links owner group size date name[F-suffix]
+*/
+static void print_long(const Entry *entry, const Options *options) {
+    char perms[11];
+    mode_string(entry->st.st_mode, perms);
+
+    // Look up names for the numeric uid/gid. Copy immediately —
+    // getpwuid / getgrgid return static buffers that get reused.
+    struct passwd *pw = getpwuid(entry->st.st_uid);
+    struct group  *gr = getgrgid(entry->st.st_gid);
+    char owner[32], group[32];
+    snprintf(owner, sizeof owner, "%s", pw ? pw->pw_name : "?");
+    snprintf(group, sizeof group, "%s", gr ? gr->gr_name : "?");
+
+    // Size column (human-readable if -h was given).
+    char sizebuf[32];
+    if (opt_has(options, OPT_H))
+        print_human(entry->st.st_size, sizebuf, sizeof sizebuf);
+    else
+        snprintf(sizebuf, sizeof sizebuf, "%ld", (long)entry->st.st_size);
+
+    // Modification time, e.g. "Sep 10 14:22".
+    char timebuf[64];
+    struct tm *tm = localtime(&entry->st.st_mtime);
+    strftime(timebuf, sizeof timebuf, "%b %e %H:%M", tm);
+
+    // Everything up to and including the time column.
+    printf(
+            "%s %3lu %-8s %-8s %8s %s ",
+            perms,
+            (unsigned long)entry->st.st_nlink,
+            owner, group, sizebuf, timebuf
+    );
+
+    // Name (colored if stdout is a TTY).
+    const char *color = use_color() ? color_for(entry) : "";
+    const char *reset = use_color() ? RESET         : "";
+    printf("%s%s%s", color, entry->name, reset);
+
+    // -F suffix, if requested.
+    if (opt_has(options, OPT_F)) {
+        if (S_ISDIR(entry->st.st_mode))       
+            putchar('/');
+        else if (entry->st.st_mode & S_IXUSR) 
+            putchar('*');
+        else if (S_ISLNK(entry->st.st_mode))  
+            putchar('@');
+    }
+    putchar('\n');
+}
