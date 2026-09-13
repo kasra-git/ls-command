@@ -109,3 +109,17 @@ static void print_human(long size, char *buffer, size_t length) {
     else        
         snprintf(buffer, length, "%.1f%s", double_size, units[counter]);
 }
+
+/*
+Choose a color based on the entry's type.
+Order matters: a directory wins over "executable", ...
+*/
+static const char *color_for(const Entry *entry) {
+    if (S_ISDIR(entry->st.st_mode))       
+        return COLOR_DIR;
+    if (S_ISLNK(entry->st.st_mode))       
+        return COLOR_LINK;
+    if (entry->st.st_mode & S_IXUSR)      
+        return COLOR_EXEC;
+    return COLOR_FILE;
+}
