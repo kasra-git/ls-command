@@ -80,7 +80,7 @@ This produces a `ls` binary in the project root.
 To build manually without `make`:
 
 ```bash
-gcc -std=c99 -D_POSIX_C_SOURCE=200809L -Wall -Wextra -O2 \ main.c src.c -o ls
+gcc -std=c99 -D_POSIX_C_SOURCE=200809L -Wall -Wextra -O2 \ main.c src/src.c -o ls
 ```
 
 ---
