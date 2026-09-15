@@ -186,3 +186,32 @@ static void print_long(const Entry *entry, const Options *options) {
     }
     putchar('\n');
 }
+
+/*
+Dispatch for a single entry: inode column (if -i),
+then either long format or a plain colored name.
+*/
+static void print_entry(const Entry *entry, const Options *options) {
+    if (opt_has(options, OPT_i))
+        printf("%lu ", (unsigned long)entry->st.st_ino);
+
+    if (opt_has(options, OPT_L)) {
+        print_long(entry, options);
+        return;
+    }
+
+    // Short format: name, optional -F suffix, newline.
+    const char *color = use_color() ? color_for(entry) : "";
+    const char *reset = use_color() ? RESET         : "";
+    printf("%s%s%s", color, entry->name, reset);
+
+    if (opt_has(options, OPT_F)) {
+        if (S_ISDIR(entry->st.st_mode))       
+            putchar('/');
+        else if (entry->st.st_mode & S_IXUSR) 
+            putchar('*');
+        else if (S_ISLNK(entry->st.st_mode))  
+            putchar('@');
+    }
+    putchar('\n');
+}
