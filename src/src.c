@@ -215,3 +215,87 @@ static void print_entry(const Entry *entry, const Options *options) {
     }
     putchar('\n');
 }
+
+/*
+Flow:
+    1. open the directory
+    2. read every entry, stat it, push onto a list
+    3. sort the list (name / mtime / size, then optional reverse)
+    4. print each entry
+    5. if -R, recurse into subdirectories
+*/
+int list_dir(const char *path, const Options *options) {
+    DIR *pDir = opendir(path);
+    if (!pDir) {
+        perror(path);
+        return -1;
+    }
+
+    // collect entries
+    EntryList list = {0};
+    struct dirent *de;
+
+    while ((de = readdir(pDir)) != NULL) {
+        // Skip dotfiles unless -a was given.
+        if (!opt_has(options, OPT_A) && de->d_name[0] == '.')
+            continue;
+
+        Entry e;
+        snprintf(e.name, sizeof e.name, "%s", de->d_name);
+
+        // Build a full path so lstat resolves relative to `path`,
+        char full[4096];
+        snprintf(full, sizeof full, "%s/%s", path, de->d_name);
+
+        // lstat (not stat) so symlinks themselves are described,
+        if (lstat(full, &e.st) == -1) {
+            perror(full);
+            continue;
+        }
+        list_push(&list, &e);
+    }
+    closedir(pDir);
+
+    // sort 
+    int (*cmp)(const void *, const void *) = cmp_name;
+    if (opt_has(options, OPT_T))      
+        cmp = cmp_time;
+    else if (opt_has(options, OPT_S)) 
+        cmp = cmp_size;
+
+    qsort(list.items, list.count, sizeof(Entry), cmp);
+
+    // -r reverses whatever order we just established.
+    if (opt_has(options, OPT_r)) {
+        for (size_t i = 0, j = list.count ? list.count - 1 : 0; i < j; i++, j--) {
+            Entry tmp       = list.items[i];
+            list.items[i]   = list.items[j];
+            list.items[j]   = tmp;
+        }
+    }
+
+    // print
+    for (size_t i = 0; i < list.count; i++)
+        print_entry(&list.items[i], options);
+
+    // recurse (-R)
+    if (opt_has(options, OPT_R)) {
+        for (size_t i = 0; i < list.count; i++) {
+            if (!S_ISDIR(list.items[i].st.st_mode)) 
+                continue;
+            if (strcmp(list.items[i].name, ".") == 0)  
+                continue;
+            if (strcmp(list.items[i].name, "..") == 0) 
+                continue;
+
+            char sub[4096];
+            snprintf(sub, sizeof sub, "%s/%s", path, list.items[i].name);
+
+            printf("\n%s:\n", sub);
+            list_dir(sub, options);
+        }
+    }
+
+    free(list.items);
+    return 0;
+}
