@@ -69,18 +69,14 @@ drwxr-xr-x 20 root root  4.0K Sep 10 12:00 ..
 
 ## Build
 
-Requires a C99 compiler and POSIX. On Linux or macOS:
-
 ```bash
+mkdir build
+cd build
+
+cmake -S . -B build      
+cmake --build build
+
 make
-```
-
-This produces a `ls` binary in the project root.
-
-To build manually without `make`:
-
-```bash
-gcc -std=c99 -D_POSIX_C_SOURCE=200809L -Wall -Wextra -O2 \ main.c src/src.c -o ls
 ```
 
 ---
