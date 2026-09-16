@@ -1,4 +1,4 @@
-# myls
+# ls
 
 A minimal `ls` implementation written in C from scratch.
 
